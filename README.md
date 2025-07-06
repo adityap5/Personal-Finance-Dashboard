@@ -50,44 +50,39 @@ A comprehensive web application for tracking personal finances, built with Next.
 ### Installation
 
 1. **Clone the repository**
-   \`\`\`bash
+   ```bash
    git clone <repository-url>
-   cd personal-finance-visualizer
-   \`\`\`
+   cd personal-finance-dashboard
+   ```
 
 2. **Install dependencies**
-   \`\`\`bash
+   ```bash
    npm install
-   \`\`\`
+   ```
 
 3. **Environment Setup**
-   Create a \`.env.local\` file in the root directory:
-   \`\`\`env
+   Create a `.env.local` file in the root directory:
+   ```env
    MONGODB_URI=your_mongodb_atlas_connection_string
-   \`\`\`
+   ```
 
 4. **Database Setup**
    - Create a MongoDB Atlas cluster
    - Get your connection string
-   - Replace \`<password>\` with your database user password
-   - Replace \`<dbname>\` with \`finance_tracker\`
+   - Replace `<password>` with your database user password
+   - Replace `<dbname>` with `finance`
 
-5. **Seed the Database** (Optional)
-   \`\`\`bash
-   node scripts/seed-database.js
-   \`\`\`
-
-6. **Run the Development Server**
-   \`\`\`bash
+5. **Run the Development Server**
+   ```bash
    npm run dev
-   \`\`\`
+   ```
 
 7. **Open your browser**
-   Navigate to \`http://localhost:3000\`
+   Navigate to `http://localhost:3000`
 
 ## Project Structure
 
-\`\`\`
+```
 ├── app/
 │   ├── api/
 │   │   ├── transactions/
@@ -96,8 +91,8 @@ A comprehensive web application for tracking personal finances, built with Next.
 │   │   └── budgets/
 │   │       └── route.js
 │   ├── globals.css
-│   ├── layout.jsx
-│   └── page.jsx
+│   ├── layout.js
+│   └── page.js
 ├── components/
 │   ├── ui/                    
 │   ├── transaction-form.jsx
@@ -106,28 +101,25 @@ A comprehensive web application for tracking personal finances, built with Next.
 │   ├── category-pie-chart.jsx
 │   ├── budget-form.jsx
 │   └── budget-comparison.jsx
-├── scripts/
-│   └── seed-database.js
-├── mock-data.json
 └── README.md
-\`\`\`
+```
 
 ## API Endpoints
 
 ### Transactions
-- \`GET /api/transactions\` - Fetch all transactions
-- \`POST /api/transactions\` - Create new transaction
-- \`PUT /api/transactions/[id]\` - Update transaction
-- \`DELETE /api/transactions/[id]\` - Delete transaction
+- `GET /api/transactions` - Fetch all transactions
+- `POST /api/transactions` - Create new transaction
+- `PUT /api/transactions/[id]` - Update transaction
+- `DELETE /api/transactions/[id]` - Delete transaction
 
 ### Budgets
-- \`GET /api/budgets\` - Fetch all budgets
-- \`POST /api/budgets\` - Create/update budget
+- `GET /api/budgets` - Fetch all budgets
+- `POST /api/budgets` - Create/update budget
 
 ## Database Schema
 
 ### Transactions Collection
-\`\`\`javascript
+```javascript
 {
   _id: ObjectId,
   amount: Number,
@@ -138,10 +130,10 @@ A comprehensive web application for tracking personal finances, built with Next.
   createdAt: Date,
   updatedAt: Date
 }
-\`\`\`
+```
 
 ### Budgets Collection
-\`\`\`javascript
+```javascript
 {
   _id: ObjectId,
   category: String,
@@ -150,7 +142,7 @@ A comprehensive web application for tracking personal finances, built with Next.
   createdAt: Date,
   updatedAt: Date
 }
-\`\`\`
+```
 
 ## Features in Detail
 
@@ -181,31 +173,12 @@ A comprehensive web application for tracking personal finances, built with Next.
 ## Customization
 
 ### Adding New Categories
-Edit the \`CATEGORIES\` array in:
-- \`components/transaction-form.jsx\`
-- \`components/budget-form.jsx\`
+Edit the `CATEGORIES` array in:
+- `components/transaction-form.jsx`
+- `components/budget-form.jsx`
 
 ### Modifying Chart Colors
-Update the \`COLORS\` array in \`components/category-pie-chart.jsx\`
-
-### Changing Currency Format
-The app uses Indian Rupee (₹) formatting. To change:
-1. Update \`toLocaleString('en-IN')\` calls
-2. Replace \`IndianRupee\` icon imports
-3. Modify currency symbols in components
-
-## Deployment
-
-### Vercel Deployment
-1. Push code to GitHub repository
-2. Connect repository to Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy automatically
-
-### Environment Variables for Production
-\`\`\`env
-MONGODB_URI=your_production_mongodb_uri
-\`\`\`
+Update the `COLORS` array in `components/category-pie-chart.jsx`
 
 ## Performance Optimizations
 
@@ -222,19 +195,12 @@ MONGODB_URI=your_production_mongodb_uri
 - **Database Security**: MongoDB connection with authentication
 - **CORS Protection**: Built-in Next.js security features
 
-## Browser Support
-
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
-
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch (\`git checkout -b feature/amazing-feature\`)
-3. Commit your changes (\`git commit -m 'Add amazing feature'\`)
-4. Push to the branch (\`git push origin feature/amazing-feature\`)
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
 ## License
