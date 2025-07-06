@@ -17,7 +17,7 @@ const alertVariants = cva(
       variant: "default",
     },
   }
-)
+) 
 
 const Alert = React.forwardRef((props, ref) => {
   const { className, variant, ...rest } = props
