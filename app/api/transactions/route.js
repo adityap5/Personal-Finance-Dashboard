@@ -1,19 +1,23 @@
-import { MongoClient } from "mongodb"
-
-const uri = process.env.MONGODB_URI
-const client = new MongoClient(uri)
-
-async function connectToDatabase() {
-  if (!client.topology || !client.topology.isConnected()) {
-    await client.connect()
-  }
-  return client.db("finance")
-}
+/**
+ * GET  /api/transactions       — fetch authenticated user's transactions
+ * POST /api/transactions       — create a new transaction for current user
+ */
+import { auth } from "@/lib/auth"
+import { getDb } from "@/lib/mongodb"
 
 export async function GET() {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   try {
-    const db = await connectToDatabase()
-    const transactions = await db.collection("transactions").find({}).sort({ date: -1 }).toArray()
+    const db = await getDb()
+    const transactions = await db
+      .collection("transactions")
+      .find({ userId: session.user.id })
+      .sort({ date: -1 })
+      .toArray()
 
     return Response.json(transactions)
   } catch (error) {
@@ -23,6 +27,11 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
     const { amount, description, category, type, date } = body
@@ -31,13 +40,14 @@ export async function POST(request) {
       return Response.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    if (amount <= 0) {
+    if (Number(amount) <= 0) {
       return Response.json({ error: "Amount must be greater than 0" }, { status: 400 })
     }
 
-    const db = await connectToDatabase()
+    const db = await getDb()
     const transaction = {
-      amount: Number.parseFloat(amount),
+      userId: session.user.id,
+      amount: parseFloat(amount),
       description,
       category,
       type,
@@ -48,11 +58,8 @@ export async function POST(request) {
     const result = await db.collection("transactions").insertOne(transaction)
 
     return Response.json(
-      {
-        _id: result.insertedId,
-        ...transaction,
-      },
-      { status: 201 },
+      { _id: result.insertedId, ...transaction },
+      { status: 201 }
     )
   } catch (error) {
     console.error("Error creating transaction:", error)

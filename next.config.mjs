@@ -9,6 +9,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Exclude Node.js-only packages from edge/client bundles
+  serverExternalPackages: ["mongodb", "bcryptjs"],
 }
 
 export default nextConfig

@@ -1,112 +1,88 @@
-import { MongoClient, ObjectId } from "mongodb"
+/**
+ * GET    /api/transactions/[id]   — fetch a single transaction (must belong to user)
+ * PUT    /api/transactions/[id]   — update a transaction
+ * DELETE /api/transactions/[id]   — delete a transaction
+ */
+import { auth } from "@/lib/auth"
+import { getDb } from "@/lib/mongodb"
+import { ObjectId } from "mongodb"
 
-const uri = process.env.MONGODB_URI
-const client = new MongoClient(uri)
+/** Helper: validate ObjectId and ownership */
+async function getOwnedTransaction(id, userId) {
+  if (!id || !ObjectId.isValid(id)) return { error: "Invalid ID", status: 400 }
 
-async function connectToDatabase() {
-  if (!client.topology || !client.topology.isConnected()) {
-    await client.connect()
-  }
-  return client.db("finance")
+  const db = await getDb()
+  const transaction = await db
+    .collection("transactions")
+    .findOne({ _id: new ObjectId(id) })
+
+  if (!transaction) return { error: "Transaction not found", status: 404 }
+  if (transaction.userId !== userId) return { error: "Forbidden", status: 403 }
+
+  return { transaction, db }
 }
 
 export async function GET(request, { params }) {
-  try {
-    const { id } = params
+  const session = await auth()
+  if (!session?.user?.id) return Response.json({ error: "Unauthorized" }, { status: 401 })
 
-    if (!id || !ObjectId.isValid(id)) {
-      return Response.json({ error: "Invalid or missing transaction ID" }, { status: 400 })
-    }
+  const { id } = await params
+  const { transaction, error, status } = await getOwnedTransaction(id, session.user.id)
+  if (error) return Response.json({ error }, { status })
 
-    const db = await connectToDatabase()
-    const transaction = await db.collection("transactions").findOne({ _id: new ObjectId(id) })
-
-    if (!transaction) {
-      return Response.json({ error: "Transaction not found" }, { status: 404 })
-    }
-
-    return Response.json(transaction)
-  } catch (error) {
-    return Response.json({ error: "Failed to fetch transaction: " + error.message }, { status: 500 })
-  }
+  return Response.json(transaction)
 }
 
 export async function PUT(request, { params }) {
-  try {
-    const { id } = params
+  const session = await auth()
+  if (!session?.user?.id) return Response.json({ error: "Unauthorized" }, { status: 401 })
 
-    if (!id || !ObjectId.isValid(id)) {
-      return Response.json({ error: "Invalid or missing transaction ID" }, { status: 400 })
-    }
+  const { id } = await params
+  const { transaction, db, error, status } = await getOwnedTransaction(id, session.user.id)
+  if (error) return Response.json({ error }, { status })
 
-    const { amount, description, category, type, date } = await request.json()
+  const { amount, description, category, type, date } = await request.json()
 
-    if (!amount || !description || !category || !type || !date) {
-      return Response.json({ error: "Missing required fields" }, { status: 400 })
-    }
-
-    const db = await connectToDatabase()
-    const collection = db.collection("transactions")
-
-    const existingTransaction = await collection.findOne({ _id: new ObjectId(id) })
-
-    if (!existingTransaction) {
-      return Response.json({ error: "Transaction not found" }, { status: 404 })
-    }
-
-    const result = await collection.updateOne(
-      { _id: new ObjectId(id) },
-      {
-        $set: {
-          amount: Number(amount),
-          description,
-          category,
-          type,
-          date: new Date(date),
-          updatedAt: new Date(),
-        },
-      }
-    )
-
-    const updatedTransaction = await collection.findOne({ _id: new ObjectId(id) })
-
-    return Response.json({
-      message: "Transaction updated successfully",
-      modifiedCount: result.modifiedCount,
-      transaction: updatedTransaction,
-    })
-  } catch (error) {
-    return Response.json({ error: "Failed to update transaction: " + error.message }, { status: 500 })
+  if (!amount || !description || !category || !type || !date) {
+    return Response.json({ error: "Missing required fields" }, { status: 400 })
   }
+
+  await db.collection("transactions").updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        amount: Number(amount),
+        description,
+        category,
+        type,
+        date: new Date(date),
+        updatedAt: new Date(),
+      },
+    }
+  )
+
+  const updated = await db
+    .collection("transactions")
+    .findOne({ _id: new ObjectId(id) })
+
+  return Response.json({ message: "Transaction updated successfully", transaction: updated })
 }
 
 export async function DELETE(request, { params }) {
-  try {
-    const { id } = params
+  const session = await auth()
+  if (!session?.user?.id) return Response.json({ error: "Unauthorized" }, { status: 401 })
 
-    if (!id || !ObjectId.isValid(id)) {
-      return Response.json({ error: "Invalid or missing transaction ID" }, { status: 400 })
-    }
+  const { id } = await params
+  const { db, error, status } = await getOwnedTransaction(id, session.user.id)
+  if (error) return Response.json({ error }, { status })
 
-    const db = await connectToDatabase()
-    const collection = db.collection("transactions")
+  const result = await db
+    .collection("transactions")
+    .deleteOne({ _id: new ObjectId(id) })
 
-    const existingTransaction = await collection.findOne({ _id: new ObjectId(id) })
-    if (!existingTransaction) {
-      return Response.json({ error: "Transaction not found" }, { status: 404 })
-    }
-
-    const result = await collection.deleteOne({ _id: new ObjectId(id) })
-
-    if (result.deletedCount === 0) {
-      return Response.json({ error: "Failed to delete transaction" }, { status: 500 })
-    }
-
-    return Response.json({
-      message: "Transaction deleted successfully",
-      deletedCount: result.deletedCount,
-    })
-  } catch (error) {
-    return Response.json({ error: "Failed to delete transaction: " + error.message }, { status: 500 })
+  if (result.deletedCount === 0) {
+    return Response.json({ error: "Failed to delete" }, { status: 500 })
   }
+
+  return Response.json({ message: "Transaction deleted successfully" })
 }
