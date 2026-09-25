@@ -1,6 +1,6 @@
 /**
- * GET  /api/transactions       — fetch authenticated user's transactions
- * POST /api/transactions       — create a new transaction for current user
+ * GET  /api/transactions — fetch authenticated user's transactions
+ * POST /api/transactions — create a new transaction for current user (description is optional)
  */
 import { auth } from "@/lib/auth"
 import { getDb } from "@/lib/mongodb"
@@ -16,7 +16,7 @@ export async function GET() {
     const transactions = await db
       .collection("transactions")
       .find({ userId: session.user.id })
-      .sort({ date: -1 })
+      .sort({ date: -1, createdAt: -1 })
       .toArray()
 
     return Response.json(transactions)
@@ -36,22 +36,32 @@ export async function POST(request) {
     const body = await request.json()
     const { amount, description, category, type, date } = body
 
-    if (!amount || !description || !category || !type || !date) {
-      return Response.json({ error: "Missing required fields" }, { status: 400 })
+    // Description is OPTIONAL. Amount, category, type, date are required.
+    if (!amount || !category || !type || !date) {
+      return Response.json(
+        { error: "Amount, category, type, and date are required" },
+        { status: 400 }
+      )
     }
 
-    if (Number(amount) <= 0) {
-      return Response.json({ error: "Amount must be greater than 0" }, { status: 400 })
+    const parsedAmount = parseFloat(amount)
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return Response.json(
+        { error: "Amount must be a number greater than 0" },
+        { status: 400 }
+      )
     }
 
     const db = await getDb()
     const transaction = {
       userId: session.user.id,
-      amount: parseFloat(amount),
-      description,
-      category,
+      amount: parsedAmount,
+      description: (description || "").trim(),
+      category: category.trim(),
       type,
       date: new Date(date),
+      source: body.source || "manual",
+      sourceId: body.sourceId || null,
       createdAt: new Date(),
     }
 

@@ -2,19 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, AlertCircle } from "lucide-react"
-
-const CATEGORIES = [
-  "Food & Dining", "Transportation", "Shopping", "Entertainment",
-  "Bills & Utilities", "Healthcare", "Education", "Travel",
-  "Groceries", "Rent", "Investment", "Salary", "Business", "Other"
-]
+import { Loader2, AlertCircle, IndianRupee, Calendar } from "lucide-react"
+import CategorySelector from "./category-selector"
 
 export function TransactionForm({ onTransactionAdded, editTransaction = null, onCancel = null }) {
   const [formData, setFormData] = useState({
@@ -50,9 +39,7 @@ export function TransactionForm({ onTransactionAdded, editTransaction = null, on
       newErrors.amount = "Amount must be a number greater than 0"
     }
 
-    if (!formData.description.trim()) {
-      newErrors.description = "Description is required"
-    }
+    // Description is explicitly OPTIONAL
 
     if (!formData.category) {
       newErrors.category = "Please select a category"
@@ -67,7 +54,6 @@ export function TransactionForm({ onTransactionAdded, editTransaction = null, on
     }
 
     setErrors(newErrors)
-
     return Object.keys(newErrors).length === 0
   }
 
@@ -85,10 +71,11 @@ export function TransactionForm({ onTransactionAdded, editTransaction = null, on
 
       const response = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ...formData, amount: parseFloat(formData.amount) }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          amount: parseFloat(formData.amount),
+        }),
       })
 
       const result = await response.json()
@@ -118,104 +105,146 @@ export function TransactionForm({ onTransactionAdded, editTransaction = null, on
   }
 
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.2 }}>
+    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.2 }}>
       <div className="mb-4">
-        <h3 className="text-lg font-semibold">{editTransaction ? "Edit Transaction" : "Add New Transaction"}</h3>
-        {editTransaction && <p className="text-sm text-gray-600">Editing: {editTransaction.description}</p>}
+        <h3 className="text-base font-bold text-white">
+          {editTransaction ? "Edit Transaction" : "Record Transaction"}
+        </h3>
+        <p className="text-xs text-slate-400 mt-0.5">
+          {editTransaction ? "Update transaction details" : "Add an income or expense to your records"}
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {submitError && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{submitError}</AlertDescription>
-          </Alert>
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{submitError}</span>
+          </div>
         )}
 
-        {/* Type */}
-        <div className="space-y-1">
-          <Label htmlFor="type">Type</Label>
-          <Select
-            value={formData.type}
-            onValueChange={(value) => setFormData({ ...formData, type: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="expense">Expense</SelectItem>
-              <SelectItem value="income">Income</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.type && <p className="text-sm text-red-600">{errors.type}</p>}
+        {/* Type: Segmented toggle */}
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            Transaction Type
+          </label>
+          <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-white/4 border border-white/8 backdrop-blur-md">
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, type: "expense" })}
+              className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                formData.type === "expense"
+                  ? "bg-rose-500/25 text-rose-200 border border-rose-500/40 shadow-sm"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Expense
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, type: "income" })}
+              className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                formData.type === "income"
+                  ? "bg-emerald-500/25 text-emerald-200 border border-emerald-500/40 shadow-sm"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Income
+            </button>
+          </div>
+          {errors.type && <p className="text-xs text-red-400">{errors.type}</p>}
         </div>
 
         {/* Amount */}
-        <div className="space-y-1">
-          <Label htmlFor="amount">Amount (₹)</Label>
-          <Input
-            id="amount"
-            type="number"
-            step="0.01"
-            placeholder="0.00"
-            value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-          />
-          {errors.amount && <p className="text-sm text-red-600">{errors.amount}</p>}
+        <div className="space-y-1.5">
+          <label htmlFor="amount" className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            Amount (₹)
+          </label>
+          <div className="relative">
+            <IndianRupee className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400" />
+            <input
+              id="amount"
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              style={{ colorScheme: "dark" }}
+              value={formData.amount}
+              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-bold placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 text-base"
+            />
+          </div>
+          {errors.amount && <p className="text-xs text-red-400">{errors.amount}</p>}
         </div>
 
-        {/* Description */}
-        <div className="space-y-1">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
+        {/* Category: Uses CategorySelector with inline create */}
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            Category
+          </label>
+          <CategorySelector
+            value={formData.category}
+            onValueChange={(val) => setFormData({ ...formData, category: val })}
+            placeholder="Select or create category"
+          />
+          {errors.category && <p className="text-xs text-red-400">{errors.category}</p>}
+        </div>
+
+        {/* Description: OPTIONAL */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label htmlFor="description" className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Description
+            </label>
+            <span className="text-[10px] text-slate-500">Optional</span>
+          </div>
+          <input
             id="description"
-            placeholder="Enter transaction description"
+            type="text"
+            style={{ colorScheme: "dark" }}
+            placeholder="e.g. Dinner with team, Groceries, Client payment"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-medium placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 text-sm"
           />
-          {errors.description && <p className="text-sm text-red-600">{errors.description}</p>}
-        </div>
-
-        {/* Category */}
-        <div className="space-y-1">
-          <Label htmlFor="category">Category</Label>
-          <Select
-            value={formData.category}
-            onValueChange={(value) => setFormData({ ...formData, category: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.category && <p className="text-sm text-red-600">{errors.category}</p>}
         </div>
 
         {/* Date */}
-        <div className="space-y-1">
-          <Label htmlFor="date">Date</Label>
-          <Input
-            id="date"
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-          />
-          {errors.date && <p className="text-sm text-red-600">{errors.date}</p>}
+        <div className="space-y-1.5">
+          <label htmlFor="date" className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            Date
+          </label>
+          <div className="relative">
+            <input
+              id="date"
+              type="date"
+              style={{ colorScheme: "dark" }}
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/40 text-sm cursor-pointer"
+            />
+          </div>
+          {errors.date && <p className="text-xs text-red-400">{errors.date}</p>}
         </div>
 
-        <div className="flex gap-2">
-          <Button type="submit" disabled={loading} className="flex-1">
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {editTransaction ? "Update Transaction" : "Add Transaction"}
-          </Button>
+        {/* Buttons */}
+        <div className="flex gap-2 pt-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-950/40 disabled:opacity-50"
+          >
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {editTransaction ? "Save Changes" : "Add Transaction"}
+          </button>
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={loading}
+              className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/8 text-slate-300 hover:text-white text-sm font-semibold transition-colors"
+            >
               Cancel
-            </Button>
+            </button>
           )}
         </div>
       </form>

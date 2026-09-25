@@ -1,10 +1,7 @@
 "use client"
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { IndianRupee, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react"
+import { IndianRupee, TrendingUp, TrendingDown, AlertTriangle, Target, CheckCircle2 } from "lucide-react"
 
 export function BudgetComparison({ budgets, transactions, selectedMonth }) {
   const processData = () => {
@@ -16,7 +13,7 @@ export function BudgetComparison({ budgets, transactions, selectedMonth }) {
         .filter((t) => t.type === "expense" && t.category === budget.category)
         .reduce((sum, t) => sum + t.amount, 0)
 
-      const percentage = (spent / budget.amount) * 100
+      const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0
       const remaining = budget.amount - spent
 
       return {
@@ -34,14 +31,14 @@ export function BudgetComparison({ budgets, transactions, selectedMonth }) {
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload
+      const item = payload[0].payload
       return (
-        <div className="bg-white p-3 border rounded-lg shadow-lg">
-          <p className="font-medium">{label}</p>
-          <p className="text-sm text-blue-600">Budget: ₹{data.budget.toLocaleString("en-IN")}</p>
-          <p className="text-sm text-red-600">Spent: ₹{data.spent.toLocaleString("en-IN")}</p>
-          <p className="text-sm text-green-600">Remaining: ₹{data.remaining.toLocaleString("en-IN")}</p>
-          <p className="text-xs text-gray-500">{data.percentage.toFixed(1)}% used</p>
+        <div className="bg-[#0a1c14] p-3 border border-white/10 rounded-xl shadow-2xl text-xs space-y-1 text-white">
+          <p className="font-bold text-sm text-emerald-400">{label}</p>
+          <p className="text-slate-300">Budget: ₹{item.budget.toLocaleString("en-IN")}</p>
+          <p className="text-rose-400">Spent: ₹{item.spent.toLocaleString("en-IN")}</p>
+          <p className="text-emerald-400">Remaining: ₹{item.remaining.toLocaleString("en-IN")}</p>
+          <p className="text-slate-500">{item.percentage.toFixed(1)}% utilized</p>
         </div>
       )
     }
@@ -55,175 +52,132 @@ export function BudgetComparison({ budgets, transactions, selectedMonth }) {
 
   if (data.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <p>No budgets set for {formatMonthDisplay(selectedMonth || new Date().toISOString().slice(0, 7))}.</p>
-        <p className="text-sm mt-1">Create a budget to start tracking!</p>
+      <div className="text-center py-12 rounded-2xl bg-[#071912] border border-white/6 text-slate-400">
+        <Target className="h-10 w-10 text-slate-600 mx-auto mb-2" />
+        <p className="font-semibold text-white">
+          No budgets set for {formatMonthDisplay(selectedMonth || new Date().toISOString().slice(0, 7))}
+        </p>
+        <p className="text-xs text-slate-500 mt-1">Set a budget for any category to track monthly spending limits.</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data.map((item) => (
-          <Card key={item.category} className="relative overflow-hidden">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center justify-between">
-                {item.category}
-                <Badge
-                  variant={item.status === "over" ? "destructive" : item.status === "warning" ? "secondary" : "default"}
+      {/* Category Budget Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {data.map((item) => {
+          const isOver = item.status === "over"
+          const isWarning = item.status === "warning"
+
+          return (
+            <div
+              key={item.category}
+              className={`p-4 rounded-2xl bg-[#071912] border ${
+                isOver
+                  ? "border-rose-500/30 bg-rose-500/3"
+                  : isWarning
+                  ? "border-amber-500/30 bg-amber-500/3"
+                  : "border-white/6"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-bold text-white truncate max-w-[160px]">
+                  {item.category}
+                </span>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    isOver
+                      ? "bg-rose-500/15 border-rose-500/30 text-rose-300"
+                      : isWarning
+                      ? "bg-amber-500/15 border-amber-500/30 text-amber-300"
+                      : "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
+                  }`}
                 >
                   {item.percentage.toFixed(0)}%
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Spent</span>
-                  <span className="font-medium flex items-center gap-1">
-                    <IndianRupee className="h-3 w-3" />
-                    {item.spent.toLocaleString("en-IN")}
-                  </span>
+                </span>
+              </div>
+
+              <div className="space-y-1 mb-3">
+                <div className="flex justify-between text-xs text-slate-400">
+                  <span>Spent: ₹{item.spent.toLocaleString("en-IN")}</span>
+                  <span>Budget: ₹{item.budget.toLocaleString("en-IN")}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Budget</span>
-                  <span className="font-medium flex items-center gap-1">
-                    <IndianRupee className="h-3 w-3" />
-                    {item.budget.toLocaleString("en-IN")}
-                  </span>
+                <div className="h-1.5 rounded-full bg-white/6 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      isOver
+                        ? "bg-rose-500"
+                        : isWarning
+                        ? "bg-amber-400"
+                        : "bg-gradient-to-r from-emerald-500 to-green-400"
+                    }`}
+                    style={{ width: `${Math.min(100, item.percentage)}%` }}
+                  />
                 </div>
               </div>
 
-              <Progress
-                value={Math.min(100, item.percentage)}
-                className={`h-2 ${
-                  item.status === "over"
-                    ? "[&>div]:bg-red-500"
-                    : item.status === "warning"
-                      ? "[&>div]:bg-yellow-500"
-                      : "[&>div]:bg-green-500"
-                }`}
-              />
-
-              <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center justify-between text-[11px]">
                 <span
-                  className={`flex items-center gap-1 ${
-                    item.status === "over"
-                      ? "text-red-600"
-                      : item.status === "warning"
-                        ? "text-yellow-600"
-                        : "text-green-600"
+                  className={`flex items-center gap-1 font-medium ${
+                    isOver
+                      ? "text-rose-400"
+                      : isWarning
+                      ? "text-amber-400"
+                      : "text-emerald-400"
                   }`}
                 >
-                  {item.status === "over" ? (
+                  {isOver ? (
                     <>
-                      <AlertTriangle className="h-3 w-3" />
-                      Over budget
+                      <AlertTriangle className="h-3 w-3" /> Over budget
                     </>
-                  ) : item.status === "warning" ? (
+                  ) : isWarning ? (
                     <>
-                      <TrendingUp className="h-3 w-3" />
-                      Near limit
+                      <TrendingUp className="h-3 w-3" /> Near limit
                     </>
                   ) : (
                     <>
-                      <TrendingDown className="h-3 w-3" />
-                      On track
+                      <CheckCircle2 className="h-3 w-3" /> On track
                     </>
                   )}
                 </span>
-                <span className="text-gray-500">₹{item.remaining.toLocaleString("en-IN")} left</span>
+                <span className="text-slate-500">
+                  ₹{item.remaining.toLocaleString("en-IN")} remaining
+                </span>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          )
+        })}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Budget vs Actual Spending</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="category" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={80} />
-                <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Bar dataKey="budget" fill="#3b82f6" name="Budget" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="spent" fill="#ef4444" name="Spent" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Spending Insights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {data.filter((item) => item.status === "over").length > 0 && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <h4 className="font-medium text-red-800 mb-2 flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  Over Budget Categories
-                </h4>
-                <div className="space-y-1">
-                  {data
-                    .filter((item) => item.status === "over")
-                    .map((item) => (
-                      <p key={item.category} className="text-sm text-red-700">
-                        <strong>{item.category}</strong>: ₹{(item.spent - item.budget).toLocaleString("en-IN")} over
-                        budget
-                      </p>
-                    ))}
-                </div>
-              </div>
-            )}
-
-            {data.filter((item) => item.status === "warning").length > 0 && (
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  Near Budget Limit
-                </h4>
-                <div className="space-y-1">
-                  {data
-                    .filter((item) => item.status === "warning")
-                    .map((item) => (
-                      <p key={item.category} className="text-sm text-yellow-700">
-                        <strong>{item.category}</strong>: {item.percentage.toFixed(0)}% of budget used
-                      </p>
-                    ))}
-                </div>
-              </div>
-            )}
-
-            {data.filter((item) => item.status === "good").length > 0 && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <h4 className="font-medium text-green-800 mb-2 flex items-center gap-2">
-                  <TrendingDown className="h-4 w-4" />
-                  Well Within Budget
-                </h4>
-                <div className="space-y-1">
-                  {data
-                    .filter((item) => item.status === "good")
-                    .map((item) => (
-                      <p key={item.category} className="text-sm text-green-700">
-                        <strong>{item.category}</strong>: ₹{item.remaining.toLocaleString("en-IN")} remaining
-                      </p>
-                    ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Chart Section */}
+      <div className="p-5 rounded-2xl bg-[#071912] border border-white/6">
+        <h4 className="text-sm font-bold text-white mb-1">Budget vs Actual Spending</h4>
+        <p className="text-xs text-slate-500 mb-4">Comparison of budgeted target vs realized expenses</p>
+        <div className="h-72 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 25 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff0a" />
+              <XAxis
+                dataKey="category"
+                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                angle={-25}
+                textAnchor="end"
+                interval={0}
+                height={45}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: "#94a3b8" }}
+                tickFormatter={(val) => `₹${(val / 1000).toFixed(0)}k`}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend wrapperStyle={{ fontSize: 12, paddingTop: 10 }} />
+              <Bar dataKey="budget" fill="#10b981" name="Budget" radius={[4, 4, 0, 0]} opacity={0.7} />
+              <Bar dataKey="spent" fill="#f43f5e" name="Spent" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   )
 }

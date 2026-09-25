@@ -1,6 +1,6 @@
 /**
  * GET    /api/transactions/[id]   — fetch a single transaction (must belong to user)
- * PUT    /api/transactions/[id]   — update a transaction
+ * PUT    /api/transactions/[id]   — update a transaction (description is optional)
  * DELETE /api/transactions/[id]   — delete a transaction
  */
 import { auth } from "@/lib/auth"
@@ -38,22 +38,29 @@ export async function PUT(request, { params }) {
   if (!session?.user?.id) return Response.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
-  const { transaction, db, error, status } = await getOwnedTransaction(id, session.user.id)
+  const { db, error, status } = await getOwnedTransaction(id, session.user.id)
   if (error) return Response.json({ error }, { status })
 
-  const { amount, description, category, type, date } = await request.json()
+  const body = await request.json()
+  const { amount, description, category, type, date } = body
 
-  if (!amount || !description || !category || !type || !date) {
-    return Response.json({ error: "Missing required fields" }, { status: 400 })
+  // Description is OPTIONAL. Amount, category, type, date are required.
+  if (!amount || !category || !type || !date) {
+    return Response.json({ error: "Amount, category, type, and date are required" }, { status: 400 })
+  }
+
+  const parsedAmount = parseFloat(amount)
+  if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    return Response.json({ error: "Amount must be a number greater than 0" }, { status: 400 })
   }
 
   await db.collection("transactions").updateOne(
     { _id: new ObjectId(id) },
     {
       $set: {
-        amount: Number(amount),
-        description,
-        category,
+        amount: parsedAmount,
+        description: (description || "").trim(),
+        category: category.trim(),
         type,
         date: new Date(date),
         updatedAt: new Date(),
