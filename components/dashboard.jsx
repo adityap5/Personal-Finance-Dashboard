@@ -39,6 +39,7 @@ import RecurringTransactions from "@/components/recurring-transactions"
 import Reminders from "@/components/reminders"
 import CategoryManager from "@/components/category-manager"
 import UpcomingPaymentsWidget from "@/components/upcoming-payments-widget"
+import RubberSegment from "@/components/RubberSegment"
 import {
   Dialog,
   DialogContent,
@@ -202,14 +203,14 @@ export default function Dashboard({ user }) {
     )
   }
 
-  const TABS = [
-    { key: "overview", label: "Overview", icon: Wallet },
-    { key: "transactions", label: "Transactions", icon: PlusCircle },
-    { key: "categories", label: "Categories", icon: Tag },
-    { key: "budgets", label: "Budgets", icon: Target },
-    { key: "goals", label: "Goals", icon: Sparkles },
-    { key: "recurring", label: "Recurring", icon: Repeat },
-    { key: "reminders", label: "Reminders", icon: Bell },
+  const segmentItems = [
+    { value: "overview", label: "Overview", icon: <Wallet className="h-4 w-4 shrink-0" /> },
+    { value: "transactions", label: "Transactions", icon: <PlusCircle className="h-4 w-4 shrink-0" /> },
+    { value: "categories", label: "Categories", icon: <Tag className="h-4 w-4 shrink-0" /> },
+    { value: "budgets", label: "Budgets", icon: <Target className="h-4 w-4 shrink-0" /> },
+    { value: "goals", label: "Goals", icon: <Sparkles className="h-4 w-4 shrink-0" /> },
+    { value: "recurring", label: "Recurring", icon: <Repeat className="h-4 w-4 shrink-0" /> },
+    { value: "reminders", label: "Reminders", icon: <Bell className="h-4 w-4 shrink-0" /> },
   ]
 
   return (
@@ -472,30 +473,29 @@ export default function Dashboard({ user }) {
           </div>
         </div>
 
-        {/* ── Segmented Floating Pill Navigation ── */}
-        <nav
-          className="flex items-center gap-1.5 overflow-x-auto p-1.5 rounded-2xl bg-[#071912]/80 backdrop-blur-xl border border-white/10 no-scrollbar shadow-lg"
-          aria-label="Dashboard Navigation"
-        >
-          {TABS.map((tab) => {
-            const Icon = tab.icon
-            const isActive = activeTab === tab.key
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-950/50"
-                    : "text-slate-400 hover:text-white hover:bg-white/4"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{tab.label}</span>
-              </button>
-            )
-          })}
-        </nav>
+        {/* ── RubberSegment Interactive Tab Navigation ── */}
+        <div className="overflow-x-auto no-scrollbar py-1">
+          <RubberSegment
+            items={segmentItems}
+            value={activeTab}
+            onChange={(val) => setActiveTab(val)}
+            trackColor="#071912"
+            thumbColor="#10b981"
+            textColor="#94a3b8"
+            activeTextColor="#ffffff"
+            size="md"
+            radius={14}
+            inset={3}
+            equalSlots={false}
+            stretch={90}
+            squash={3}
+            speed={1}
+            glide={75}
+            draggable
+            className="border border-white/10 backdrop-blur-2xl shadow-xl shadow-black/40 min-w-max"
+            aria-label="Dashboard navigation tabs"
+          />
+        </div>
 
         {/* ── Tab Content Views ── */}
         <main>

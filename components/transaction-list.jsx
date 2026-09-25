@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+import AnimatedList from "./AnimatedList"
 
 export function TransactionList({ transactions, onTransactionUpdated, selectedMonth }) {
   const [editingTransaction, setEditingTransaction] = useState(null)
@@ -137,135 +138,137 @@ export function TransactionList({ transactions, onTransactionUpdated, selectedMo
         </div>
       </div>
 
-      {/* Transaction List */}
-      <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
-        <AnimatePresence>
-          {filteredTransactions.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-14 rounded-2xl bg-white/2 border border-white/5"
-            >
-              <p className="text-sm font-medium text-slate-400">No transactions found</p>
-              <p className="text-xs text-slate-600 mt-1">
-                Try adjusting your search or category filters.
-              </p>
-            </motion.div>
-          ) : (
-            filteredTransactions
-              .sort((a, b) => new Date(b.date) - new Date(a.date))
-              .map((transaction) => {
-                const isIncome = transaction.type === "income"
-                // Clean fallback when description is missing/empty
-                const displayTitle =
-                  (transaction.description && transaction.description.trim()) ||
-                  transaction.category ||
-                  "Transaction"
-                const hasCustomDesc =
-                  transaction.description &&
-                  transaction.description.trim() &&
-                  transaction.description.trim().toLowerCase() !==
-                    (transaction.category || "").toLowerCase()
+      {/* Transaction List with AnimatedList from React Bits */}
+      {filteredTransactions.length === 0 ? (
+        <div className="text-center py-14 rounded-2xl bg-white/2 border border-white/5">
+          <p className="text-sm font-medium text-slate-400">No transactions found</p>
+          <p className="text-xs text-slate-600 mt-1">
+            Try adjusting your search or category filters.
+          </p>
+        </div>
+      ) : (
+        <AnimatedList
+          items={[...filteredTransactions].sort((a, b) => new Date(b.date) - new Date(a.date))}
+          showGradients={true}
+          enableArrowNavigation={true}
+          displayScrollbar={true}
+          className="w-full"
+          renderItem={(transaction, index, isSelected) => {
+            const isIncome = transaction.type === "income"
+            // Clean fallback when description is missing/empty
+            const displayTitle =
+              (transaction.description && transaction.description.trim()) ||
+              transaction.category ||
+              "Transaction"
+            const hasCustomDesc =
+              transaction.description &&
+              transaction.description.trim() &&
+              transaction.description.trim().toLowerCase() !==
+                (transaction.category || "").toLowerCase()
 
-                const isAutoReminder = transaction.source === "reminder"
+            const isAutoReminder = transaction.source === "reminder"
 
-                return (
-                  <motion.div
-                    key={transaction._id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    layout
-                    className="flex items-center justify-between p-3.5 rounded-2xl bg-[#071912] border border-white/6 hover:border-emerald-500/20 transition-all group"
+            return (
+              <div
+                className={`flex items-center justify-between p-3.5 rounded-2xl bg-[#071912] border transition-all group ${
+                  isSelected
+                    ? "border-emerald-500/40 bg-[#0c241b] shadow-lg shadow-black/40"
+                    : "border-white/6 hover:border-emerald-500/20"
+                }`}
+              >
+                {/* Left: Icon + Title/Details */}
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div
+                    className={`p-2.5 rounded-xl shrink-0 ${
+                      isIncome
+                        ? "bg-emerald-500/10 text-emerald-400"
+                        : "bg-rose-500/10 text-rose-400"
+                    }`}
                   >
-                    {/* Left: Icon + Title/Details */}
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div
-                        className={`p-2.5 rounded-xl shrink-0 ${
-                          isIncome
-                            ? "bg-emerald-500/10 text-emerald-400"
-                            : "bg-rose-500/10 text-rose-400"
-                        }`}
-                      >
-                        {isIncome ? (
-                          <TrendingUp className="h-4 w-4" />
-                        ) : (
-                          <TrendingDown className="h-4 w-4" />
-                        )}
-                      </div>
+                    {isIncome ? (
+                      <TrendingUp className="h-4 w-4" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4" />
+                    )}
+                  </div>
 
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-semibold text-white truncate">
-                            {displayTitle}
-                          </p>
-                          {isAutoReminder && (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-1">
-                              <Repeat className="h-2.5 w-2.5" />
-                              Auto
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
-                          {hasCustomDesc && (
-                            <span className="text-slate-400 font-medium">
-                              {transaction.category} •
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(transaction.date).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </span>
-                        </div>
-                      </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-semibold text-white truncate">
+                        {displayTitle}
+                      </p>
+                      {isAutoReminder && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-1">
+                          <Repeat className="h-2.5 w-2.5" />
+                          Auto
+                        </span>
+                      )}
                     </div>
 
-                    {/* Right: Amount + Actions */}
-                    <div className="flex items-center gap-3 shrink-0 ml-3">
-                      <div
-                        className={`text-sm sm:text-base font-bold flex items-center gap-0.5 ${
-                          isIncome ? "text-emerald-400" : "text-rose-400"
-                        }`}
-                      >
-                        <span>{isIncome ? "+" : "−"}</span>
-                        <IndianRupee className="h-3.5 w-3.5" />
-                        <span>{transaction.amount.toLocaleString("en-IN")}</span>
-                      </div>
-
-                      <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => setEditingTransaction(transaction)}
-                          disabled={deletingId === transaction._id}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-                          title="Edit transaction"
-                        >
-                          <Edit2 className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setShowDeleteConfirm(transaction)}
-                          disabled={deletingId === transaction._id}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                          title="Delete transaction"
-                        >
-                          {deletingId === transaction._id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-3.5 w-3.5" />
-                          )}
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
+                      {hasCustomDesc && (
+                        <span className="text-slate-400 font-medium">
+                          {transaction.category} •
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {new Date(transaction.date).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
                     </div>
-                  </motion.div>
-                )
-              })
-          )}
-        </AnimatePresence>
-      </div>
+                  </div>
+                </div>
+
+                {/* Right: Amount + Actions */}
+                <div className="flex items-center gap-3 shrink-0 ml-3">
+                  <div
+                    className={`text-sm sm:text-base font-bold flex items-center gap-0.5 ${
+                      isIncome ? "text-emerald-400" : "text-rose-400"
+                    }`}
+                  >
+                    <span>{isIncome ? "+" : "−"}</span>
+                    <IndianRupee className="h-3.5 w-3.5" />
+                    <span>{transaction.amount.toLocaleString("en-IN")}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setEditingTransaction(transaction)
+                      }}
+                      disabled={deletingId === transaction._id}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                      title="Edit transaction"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowDeleteConfirm(transaction)
+                      }}
+                      disabled={deletingId === transaction._id}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                      title="Delete transaction"
+                    >
+                      {deletingId === transaction._id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          }}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       <Dialog
