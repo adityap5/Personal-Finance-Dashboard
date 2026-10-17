@@ -1,9 +1,10 @@
 "use client"
 
 import { signOut } from "next-auth/react"
+import Link from "next/link"
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu"
 import * as Avatar from "@radix-ui/react-avatar"
-import { LogOut, Moon, User, ChevronDown } from "lucide-react"
+import { LogOut, Moon, User, ChevronDown, Trophy } from "lucide-react"
 import { toast } from "sonner"
 
 function getInitials(name) {
@@ -62,6 +63,16 @@ export default function ProfileDropdown({ user }) {
             <span>Obsidian Dark Mode</span>
             <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">Active</span>
           </div>
+
+          <DropdownMenu.Item asChild>
+            <Link
+              href="/bucket-list"
+              className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-white rounded-xl cursor-pointer select-none hover:bg-emerald-500/10 hover:text-emerald-300 outline-none transition-colors"
+            >
+              <Trophy className="h-3.5 w-3.5 text-emerald-400" />
+              <span>My Bucket List</span>
+            </Link>
+          </DropdownMenu.Item>
 
           <DropdownMenu.Separator className="my-1 h-px bg-white/8" />
 

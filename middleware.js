@@ -15,6 +15,7 @@ export const config = {
   // Only run middleware on dashboard, login, signup — NOT on homepage /
   matcher: [
     "/dashboard/:path*",
+    "/bucket-list/:path*",
     "/login",
     "/signup",
   ],

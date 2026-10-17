@@ -25,6 +25,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Zap,
+  Trophy,
 } from "lucide-react"
 import { toast } from "sonner"
 import { TransactionForm } from "@/components/transaction-form"
@@ -35,6 +36,7 @@ import { BudgetComparison } from "@/components/budget-comparison"
 import { BudgetForm } from "@/components/budget-form"
 import ProfileDropdown from "@/components/profile-dropdown"
 import SavingsGoals from "@/components/savings-goals"
+import BucketList from "@/components/bucket-list"
 import RecurringTransactions from "@/components/recurring-transactions"
 import Reminders from "@/components/reminders"
 import CategoryManager from "@/components/category-manager"
@@ -209,6 +211,7 @@ export default function Dashboard({ user }) {
     { value: "categories", label: "Categories", icon: <Tag className="h-4 w-4 shrink-0" /> },
     { value: "budgets", label: "Budgets", icon: <Target className="h-4 w-4 shrink-0" /> },
     { value: "goals", label: "Goals", icon: <Sparkles className="h-4 w-4 shrink-0" /> },
+    { value: "bucket-list", label: "Bucket List", icon: <Trophy className="h-4 w-4 shrink-0" /> },
     { value: "recurring", label: "Recurring", icon: <Repeat className="h-4 w-4 shrink-0" /> },
     { value: "reminders", label: "Reminders", icon: <Bell className="h-4 w-4 shrink-0" /> },
   ]
@@ -730,6 +733,17 @@ export default function Dashboard({ user }) {
               transition={{ duration: 0.2 }}
             >
               <SavingsGoals />
+            </motion.div>
+          )}
+
+          {/* TAB: BUCKET LIST */}
+          {activeTab === "bucket-list" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <BucketList user={user} />
             </motion.div>
           )}
 
