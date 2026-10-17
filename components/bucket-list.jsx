@@ -121,7 +121,6 @@ export default function BucketList({ fullPage = false, user = null }) {
       const data = await res.json()
       setItems(Array.isArray(data) ? data : [])
     } catch (err) {
-      console.error(err)
       setError(err.message || "Failed to load bucket list")
     } finally {
       setLoading(false)
@@ -348,7 +347,6 @@ export default function BucketList({ fullPage = false, user = null }) {
         toast.info(`Moved "${item.title}" back to To Accomplish`)
       }
     } catch (err) {
-      console.error(err)
       // Rollback on failure
       setItems((prev) =>
         prev.map((i) => (i._id === item._id ? prevItem : i))

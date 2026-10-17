@@ -47,8 +47,8 @@ export function TransactionList({ transactions, onTransactionUpdated, selectedMo
 
       setShowDeleteConfirm(null)
       onTransactionUpdated()
-    } catch (err) {
-      console.error(err)
+    } catch {
+      // Handled silently
     } finally {
       setDeletingId(null)
     }

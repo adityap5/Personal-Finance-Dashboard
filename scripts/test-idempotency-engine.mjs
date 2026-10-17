@@ -7,13 +7,9 @@ import { parseUtcDate, formatUtcDate } from "../lib/scheduler.js"
 
 function assert(condition, message) {
   if (!condition) {
-    console.error(`❌ FAIL: ${message}`)
-    process.exit(1)
+    throw new Error(`FAIL: ${message}`)
   }
-  console.log(`✅ PASS: ${message}`)
 }
-
-console.log("=== RUNNING REMINDER ENGINE IDEMPOTENCY & LOGIC TESTS ===\n")
 
 // Create an in-memory mock MongoDB simulation that honors unique constraints
 class MockCollection {
@@ -115,7 +111,6 @@ async function runTests() {
 
   // Run the processing engine
   const statsRun1 = await processDueReminders({ db })
-  console.log("Run 1 Stats:", statsRun1)
 
   assert(statsRun1.transactionsCreated === 3, "Created 3 missed transactions (July 5, Aug 5, Sep 5)")
   assert(statsRun1.duplicatesSkipped === 0, "No duplicates skipped on initial run")
@@ -133,7 +128,6 @@ async function runTests() {
   // Test 2: Idempotency & Duplicate Rejection
   // Run the engine a second time immediately
   const statsRun2 = await processDueReminders({ db })
-  console.log("Run 2 Stats (Immediate rerun):", statsRun2)
   assert(statsRun2.transactionsCreated === 0, "Zero new transactions created on rerun")
   assert(db.collection("transactions").docs.length === 3, "Still exactly 3 transactions in database")
 
@@ -141,7 +135,6 @@ async function runTests() {
   // Artificially reset nextDueDate to test code 11000 collision handling
   updatedRem.nextDueDate = parseUtcDate("2026-09-05")
   const statsCollision = await processDueReminders({ db })
-  console.log("Collision Test Stats:", statsCollision)
   assert(statsCollision.duplicatesSkipped === 1, "Duplicate key error safely caught and skipped")
   assert(statsCollision.transactionsCreated === 0, "No duplicate transactions created on collision")
 
@@ -164,7 +157,6 @@ async function runTests() {
   await db.collection("reminders").insertOne(expiringRem)
 
   const statsExpiring = await processDueReminders({ db, userId: "user_test_2" })
-  console.log("Expiring Reminder Stats:", statsExpiring)
   assert(statsExpiring.transactionsCreated === 2, "Created Aug 1 and Sep 1 installments")
   assert(statsExpiring.completedCount === 1, "Reminder status marked as completed upon reaching endDate")
 
@@ -190,8 +182,6 @@ async function runTests() {
   const statsPaused = await processDueReminders({ db, userId: "user_test_3" })
   assert(statsPaused.remindersEvaluated === 0, "Paused reminder is not evaluated or processed")
   assert(statsPaused.transactionsCreated === 0, "Zero transactions created for paused reminder")
-
-  console.log("\nALL IDEMPOTENCY & LOGIC TESTS PASSED PERFECTLY! 🚀")
 }
 
 runTests().catch((e) => {

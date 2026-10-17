@@ -36,8 +36,8 @@ export default function CategorySelector({
       if (!res.ok) throw new Error()
       const data = await res.json()
       setCategories(data)
-    } catch (err) {
-      console.error("Failed to load categories:", err)
+    } catch {
+      // Handled silently
     } finally {
       setLoading(false)
     }

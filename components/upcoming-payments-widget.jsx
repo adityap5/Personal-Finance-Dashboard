@@ -14,8 +14,8 @@ export default function UpcomingPaymentsWidget({ onNavigateToReminders }) {
         if (!res.ok) return
         const data = await res.json()
         setReminders(data.reminders || [])
-      } catch (err) {
-        console.error(err)
+      } catch {
+        // Handled silently
       } finally {
         setLoading(false)
       }

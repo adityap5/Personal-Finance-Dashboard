@@ -21,8 +21,8 @@ export default function SavingsGoals() {
       const res = await fetch("/api/savings-goals")
       const data = await res.json()
       setGoals(Array.isArray(data) ? data : [])
-    } catch (e) {
-      console.error(e)
+    } catch {
+      // Handled silently
     } finally {
       setLoading(false)
     }

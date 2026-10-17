@@ -97,7 +97,6 @@ export function TransactionForm({ onTransactionAdded, editTransaction = null, on
       onTransactionAdded()
       if (onCancel) onCancel()
     } catch (err) {
-      console.error("Error saving transaction:", err)
       setSubmitError(err.message)
     } finally {
       setLoading(false)

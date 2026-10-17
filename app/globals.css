@@ -4,26 +4,10 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
-/* ── Lazare Grotesk Font Integration ── */
-@font-face {
-  font-family: 'Lazare Grotesk';
-  src: local('Lazare Grotesk'), local('LazareGrotesk'), local('Lazare Grotesk Regular'),
-       url('/fonts/LazareGrotesk.woff2') format('woff2'),
-       url('/fonts/LazareGrotesk.woff') format('woff'),
-       url('/fonts/LazareGrotesk.ttf') format('truetype');
-  font-weight: 400 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Lazare Grotesk Trial';
-  src: local('Lazare Grotesk Trial'), local('LazareGroteskTrial'),
-       url('/fonts/LazareGroteskTrial.woff2') format('woff2');
-  font-weight: 400 900;
-  font-style: normal;
-  font-display: swap;
-}
+/* ── Typography & Font System ──
+ * Display font: 'Space Grotesk' (Google Fonts, with local 'Lazare Grotesk' support if installed on client OS)
+ * Body font: 'Plus Jakarta Sans' (Google Fonts)
+ */
 
 html {
   scroll-behavior: smooth;

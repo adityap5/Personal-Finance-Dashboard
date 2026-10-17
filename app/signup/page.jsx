@@ -77,7 +77,6 @@ export default function SignupPage() {
     } catch (error) {
       setIsLoading(false)
       setAuthError("An unexpected error occurred. Please try again.")
-      console.error(error)
     }
   }
 

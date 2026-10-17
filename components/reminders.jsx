@@ -72,8 +72,8 @@ export default function Reminders({ onTransactionsChanged = () => {} }) {
       const data = await res.json()
       setReminders(data.reminders || [])
       setSummary(data.summary || {})
-    } catch (err) {
-      console.error(err)
+    } catch {
+      // Handled silently
     } finally {
       setLoading(false)
     }

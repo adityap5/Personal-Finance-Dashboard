@@ -51,8 +51,8 @@ export default function CategoryManager() {
       if (!res.ok) throw new Error()
       const data = await res.json()
       setCategories(data)
-    } catch (err) {
-      console.error(err)
+    } catch {
+      // Handled silently
     } finally {
       setLoading(false)
     }

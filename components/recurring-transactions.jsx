@@ -59,8 +59,8 @@ export default function RecurringTransactions() {
       const res = await fetch("/api/recurring-transactions")
       const data = await res.json()
       setItems(Array.isArray(data) ? data : [])
-    } catch (e) {
-      console.error(e)
+    } catch {
+      // Handled silently
     } finally {
       setLoading(false)
     }

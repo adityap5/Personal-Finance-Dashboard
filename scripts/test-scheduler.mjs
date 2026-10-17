@@ -14,13 +14,9 @@ import {
 
 function assert(condition, message) {
   if (!condition) {
-    console.error(`❌ FAIL: ${message}`)
-    process.exit(1)
+    throw new Error(`FAIL: ${message}`)
   }
-  console.log(`✅ PASS: ${message}`)
 }
-
-console.log("=== RUNNING SCHEDULER & ROLLOVER TESTS ===\n")
 
 // 1. Days in Month & Leap Year
 assert(getDaysInMonth(2025, 2) === 28, "2025 Feb has 28 days")
@@ -90,5 +86,3 @@ assert(calculateDueStatus(new Date(), false) === "paused", "Paused status takes 
 assert(calculateDueStatus("2020-01-01", true) === "overdue", "Past due date is overdue")
 assert(calculateDueStatus("2099-01-01", true) === "upcoming", "Future date is upcoming")
 assert(calculateDueStatus("2026-10-01", true, "2026-09-01") === "completed", "Surpassed endDate is completed")
-
-console.log("\nALL SCHEDULER & ROLLOVER TESTS PASSED PERFECTLY! 🚀")
