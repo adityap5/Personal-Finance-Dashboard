@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Plus,
@@ -61,6 +61,37 @@ export default function Dashboard({ user }) {
   )
   const [exporting, setExporting] = useState(false)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
+
+  // Mobile horizontal tabs scroll tracking
+  const tabsContainerRef = useRef(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
+  const checkTabsScroll = useCallback(() => {
+    const el = tabsContainerRef.current
+    if (!el) return
+    setCanScrollLeft(el.scrollLeft > 10)
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 10)
+  }, [])
+
+  useEffect(() => {
+    const el = tabsContainerRef.current
+    if (!el) return
+    checkTabsScroll()
+    el.addEventListener("scroll", checkTabsScroll, { passive: true })
+    window.addEventListener("resize", checkTabsScroll)
+    return () => {
+      el.removeEventListener("scroll", checkTabsScroll)
+      window.removeEventListener("resize", checkTabsScroll)
+    }
+  }, [checkTabsScroll])
+
+  const scrollTabs = (dir) => {
+    const el = tabsContainerRef.current
+    if (!el) return
+    const amount = dir === "left" ? -240 : 240
+    el.scrollBy({ left: amount, behavior: "smooth" })
+  }
 
   const fetchTransactions = async () => {
     try {
@@ -476,28 +507,57 @@ export default function Dashboard({ user }) {
           </div>
         </div>
 
-        {/* ── RubberSegment Interactive Tab Navigation ── */}
-        <div className="overflow-x-auto no-scrollbar py-1">
-          <RubberSegment
-            items={segmentItems}
-            value={activeTab}
-            onChange={(val) => setActiveTab(val)}
-            trackColor="#071912"
-            thumbColor="#10b981"
-            textColor="#94a3b8"
-            activeTextColor="#ffffff"
-            size="md"
-            radius={14}
-            inset={3}
-            equalSlots={false}
-            stretch={90}
-            squash={3}
-            speed={1}
-            glide={75}
-            draggable
-            className="border border-white/10 backdrop-blur-2xl shadow-xl shadow-black/40 min-w-max"
-            aria-label="Dashboard navigation tabs"
-          />
+        {/* ── RubberSegment Interactive Tab Navigation with Mobile Scroll Controls ── */}
+        <div className="relative group/tabs flex items-center">
+          {/* Mobile Left Scroll Arrow */}
+          {canScrollLeft && (
+            <button
+              onClick={() => scrollTabs("left")}
+              aria-label="Scroll tabs left"
+              className="absolute left-0 z-20 h-10 w-8 flex items-center justify-center rounded-l-2xl bg-gradient-to-r from-[#071912] via-[#071912]/90 to-transparent text-emerald-400 hover:text-white transition-all shadow-md cursor-pointer"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
+
+          {/* Scrollable container with native touch scrolling */}
+          <div
+            ref={tabsContainerRef}
+            className="overflow-x-auto no-scrollbar py-1 w-full scroll-smooth"
+            style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x pan-y" }}
+          >
+            <RubberSegment
+              items={segmentItems}
+              value={activeTab}
+              onChange={(val) => setActiveTab(val)}
+              trackColor="#071912"
+              thumbColor="#10b981"
+              textColor="#94a3b8"
+              activeTextColor="#ffffff"
+              size="md"
+              radius={14}
+              inset={3}
+              equalSlots={false}
+              stretch={90}
+              squash={3}
+              speed={1}
+              glide={75}
+              draggable
+              className="border border-white/10 backdrop-blur-2xl shadow-xl shadow-black/40 min-w-max"
+              aria-label="Dashboard navigation tabs"
+            />
+          </div>
+
+          {/* Mobile Right Scroll Arrow */}
+          {canScrollRight && (
+            <button
+              onClick={() => scrollTabs("right")}
+              aria-label="Scroll tabs right"
+              className="absolute right-0 z-20 h-10 w-8 flex items-center justify-center rounded-r-2xl bg-gradient-to-l from-[#071912] via-[#071912]/90 to-transparent text-emerald-400 hover:text-white transition-all shadow-md cursor-pointer"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* ── Tab Content Views ── */}

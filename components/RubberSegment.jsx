@@ -119,6 +119,18 @@ export default function RubberSegment({
     jumpTo(committed.current);
   };
 
+  const scrollSlotIntoView = (i, smooth = true) => {
+    const el = itemRefs.current[i];
+    if (!el) return;
+    try {
+      el.scrollIntoView({
+        behavior: smooth ? 'smooth' : 'auto',
+        block: 'nearest',
+        inline: 'center',
+      });
+    } catch {}
+  };
+
   const listKey = list.map(item => item.value).join('|');
   useIsomorphicLayoutEffect(() => {
     measure();
@@ -129,11 +141,17 @@ export default function RubberSegment({
   }, [listKey, size, inset, equalSlots]);
 
   useEffect(() => {
+    // Initial scroll into view on mount
+    scrollSlotIntoView(index, false);
+  }, []);
+
+  useEffect(() => {
     if (!drag.current && committed.current !== index) {
       committed.current = index;
       jumpTo(index);
+      scrollSlotIntoView(index);
     }
-  });
+  }, [index]);
 
   useEffect(
     () => () => {
@@ -149,6 +167,7 @@ export default function RubberSegment({
     if (i === index) return;
     if (value === undefined) setInner(list[i].value);
     onChange?.(list[i].value, i);
+    scrollSlotIntoView(i);
   };
 
   const land = (to, v, flick, withSquash) => {
@@ -191,17 +210,36 @@ export default function RubberSegment({
     handoff.current = setTimeout(() => land(to, null, false, true), t(HANDOFF) * 1000);
   };
 
-  const localX = e => e.clientX - (box.current ? box.current.left : 0) - inset;
+  const localX = e => {
+    const rect = trackRef.current ? trackRef.current.getBoundingClientRect() : (box.current || { left: 0 });
+    return e.clientX - rect.left - inset;
+  };
 
   const handlePointerDown = (e, i) => {
     if (disabled || drag.current || e.button !== 0) return;
     box.current = trackRef.current.getBoundingClientRect();
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {}
     const x = localX(e);
     const onThumb = draggable && x >= edgeL.get() && x <= edgeR.get();
-    drag.current = { id: e.pointerId, x0: x, slot: i, onThumb, live: false, offset: 0, w: 0, hist: [[e.timeStamp, x]] };
+
+    // Do NOT capture touch pointer on items, which blocks native horizontal touch scrolling!
+    if (onThumb && e.pointerType !== 'touch') {
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {}
+    }
+
+    drag.current = {
+      id: e.pointerId,
+      x0: x,
+      slot: i,
+      onThumb,
+      live: false,
+      offset: 0,
+      w: 0,
+      hist: [[e.timeStamp, x]],
+      target: e.currentTarget
+    };
+
     if (onThumb) {
       clearTimeout(handoff.current);
       gen.current += 1;
@@ -224,7 +262,23 @@ export default function RubberSegment({
       d.offset = x - edgeL.get();
       d.w = edgeR.get() - edgeL.get();
       if (trackRef.current) trackRef.current.dataset.held = '';
+      try {
+        d.target?.setPointerCapture(e.pointerId);
+      } catch {}
     }
+
+    // Auto-scroll scrollable parent container when dragging thumb near edges
+    const container = trackRef.current?.closest('.overflow-x-auto') || trackRef.current?.parentElement;
+    if (container && container.scrollWidth > container.clientWidth) {
+      const cRect = container.getBoundingClientRect();
+      const edgePadding = 40;
+      if (e.clientX > cRect.right - edgePadding) {
+        container.scrollLeft += 10;
+      } else if (e.clientX < cRect.left + edgePadding) {
+        container.scrollLeft -= 10;
+      }
+    }
+
     const width = innerW.get();
     const l = x - d.offset;
     const maxL = width - d.w;
@@ -343,6 +397,15 @@ export default function RubberSegment({
           className="rubber-segment__item"
           onPointerDown={e => handlePointerDown(e, i)}
           onKeyDown={handleKeyDown}
+          onClick={() => {
+            if (!drag.current?.live) {
+              const from = committed.current;
+              commit(i);
+              if (from !== i) {
+                travel(from, i);
+              }
+            }
+          }}
         >
           {item.icon}
           {item.label}

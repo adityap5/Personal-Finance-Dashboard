@@ -23,7 +23,7 @@
   border-radius: var(--rs-radius);
   background: var(--rs-track);
   font-family: inherit;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -60,6 +60,7 @@
   white-space: nowrap;
   cursor: pointer;
   outline: none;
+  touch-action: manipulation;
   transition:
     opacity 160ms ease,
     transform 160ms var(--rs-ease-out);
